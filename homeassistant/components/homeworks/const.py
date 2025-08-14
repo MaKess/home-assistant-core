@@ -13,6 +13,7 @@ CONF_KEYPADS = "keypads"
 CONF_LED = "led"
 CONF_NUMBER = "number"
 CONF_RATE = "rate"
+CONF_DIMMABLE = "dimmable"
 CONF_RELEASE_DELAY = "release_delay"
 
 DEFAULT_BUTTON_NAME = "Homeworks button"

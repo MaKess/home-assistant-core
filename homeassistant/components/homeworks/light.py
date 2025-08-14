@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeworksConfigEntry
-from .const import CONF_ADDR, CONF_CONTROLLER_ID, CONF_DIMMERS, CONF_RATE, DOMAIN
+from .const import CONF_ADDR, CONF_CONTROLLER_ID, CONF_DIMMERS, CONF_RATE, CONF_DIMMABLE, DOMAIN
 from .entity import HomeworksEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +37,7 @@ async def async_setup_entry(
             dimmer[CONF_ADDR],
             dimmer[CONF_NAME],
             dimmer[CONF_RATE],
+            dimmer.get(CONF_DIMMABLE, True),
         )
         entities.append(entity)
     async_add_entities(entities, True)
@@ -45,9 +46,6 @@ async def async_setup_entry(
 class HomeworksLight(HomeworksEntity, LightEntity):
     """Homeworks Light."""
 
-    _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-
     def __init__(
         self,
         controller: Homeworks,
@@ -55,13 +53,22 @@ class HomeworksLight(HomeworksEntity, LightEntity):
         addr: str,
         name: str,
         rate: float,
+        dimmable: bool,
     ) -> None:
         """Create device with Addr, name, and rate."""
         super().__init__(controller, controller_id, addr, 0, None)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{controller_id}.{addr}")}, name=name
         )
-        self._rate = rate
+        self._dimmable = dimmable
+        if dimmable:
+            self._rate = rate
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        else:
+            self._rate = 0
+            self._attr_color_mode = ColorMode.ONOFF
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
         self._level = 0
         self._prev_level = 0
 

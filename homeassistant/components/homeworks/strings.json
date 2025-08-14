@@ -105,10 +105,12 @@
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "addr": "[%key:component::homeworks::options::step::add_keypad::data::addr%]",
+          "dimmable": "Dimmable light",
           "rate": "Fade rate"
         },
         "data_description": {
           "addr": "Light address, must be formatted as `[##:##:##:##]`",
+          "dimmable": "Is this light dimmable? Otherwise it can only be turned ON or OFF",
           "rate": "Time in seconds for the light to transition to a new brightness level"
         },
         "title": "[%key:component::homeworks::options::step::init::menu_options::add_light%]"
@@ -133,9 +135,11 @@
       },
       "edit_light": {
         "data": {
+          "dimmable": "[%key:component::homeworks::options::step::add_light::data::dimmable%]",
           "rate": "[%key:component::homeworks::options::step::add_light::data::rate%]"
         },
         "data_description": {
+          "dimmable": "[%key:component::homeworks::options::step::add_light::data_description::dimmable%]",
           "rate": "[%key:component::homeworks::options::step::add_light::data_description::rate%]"
         },
         "description": "Select a light to configure",

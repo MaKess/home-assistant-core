@@ -49,6 +49,7 @@ from .const import (
     CONF_LED,
     CONF_NUMBER,
     CONF_RATE,
+    CONF_DIMMABLE,
     CONF_RELEASE_DELAY,
     DEFAULT_BUTTON_NAME,
     DEFAULT_KEYPAD_NAME,
@@ -85,6 +86,7 @@ LIGHT_EDIT: VolDictType = {
             step=0.1,
         )
     ),
+    vol.Optional(CONF_DIMMABLE, default=True): selector.BooleanSelector(),
 }
 
 BUTTON_EDIT: VolDictType = {
