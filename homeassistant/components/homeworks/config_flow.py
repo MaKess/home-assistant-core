@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -44,6 +45,7 @@ from .const import (
     CONF_BUTTONS,
     CONF_CONTROLLER_ID,
     CONF_DIMMERS,
+    CONF_COVERS,
     CONF_INDEX,
     CONF_KEYPADS,
     CONF_LED,
@@ -54,6 +56,7 @@ from .const import (
     DEFAULT_BUTTON_NAME,
     DEFAULT_KEYPAD_NAME,
     DEFAULT_LIGHT_NAME,
+    DEFAULT_COVER_NAME,
     DOMAIN,
 )
 from .util import calculate_unique_id
@@ -185,7 +188,7 @@ def _validate_address(handler: SchemaCommonFlowHandler, addr: str) -> None:
     except vol.Invalid as err:
         raise SchemaFlowError("invalid_addr") from err
 
-    for _key in (CONF_DIMMERS, CONF_KEYPADS):
+    for _key in (CONF_DIMMERS, CONF_COVERS, CONF_KEYPADS):
         items: list[dict[str, Any]] = handler.options[_key]
 
         for item in items:
@@ -240,6 +243,19 @@ async def validate_add_light(
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     items = handler.options[CONF_DIMMERS]
+    items.append(user_input)
+    return {}
+
+
+async def validate_add_cover(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate cover input."""
+    _validate_address(handler, user_input[CONF_ADDR])
+
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to add a sub-item so we update the options directly.
+    items = handler.options[CONF_COVERS]
     items.append(user_input)
     return {}
 
@@ -410,10 +426,10 @@ async def validate_remove_button(
     return {}
 
 
-async def validate_remove_keypad_light(
+async def validate_remove_keypad_light_cover(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any], *, key: str
 ) -> dict[str, Any]:
-    """Validate remove keypad or light."""
+    """Validate remove keypad, light, or cover."""
     removed_indexes: set[str] = set(user_input[CONF_INDEX])
 
     # Standard behavior is to merge the result with the options.
@@ -424,10 +440,14 @@ async def validate_remove_keypad_light(
     for index, item in enumerate(handler.options[key]):
         if str(index) not in removed_indexes:
             items.append(item)
-        elif key != CONF_DIMMERS:
+        elif key == CONF_DIMMERS:
+            entity_domain = LIGHT_DOMAIN
+        elif key == CONF_COVERS:
+            entity_domain = COVER_DOMAIN
+        else:
             continue
         if entity_id := entity_registry.async_get_entity_id(
-            LIGHT_DOMAIN,
+            entity_domain,
             DOMAIN,
             calculate_unique_id(
                 handler.options[CONF_CONTROLLER_ID], item[CONF_ADDR], 0
@@ -452,6 +472,12 @@ DATA_SCHEMA_ADD_LIGHT = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_LIGHT_NAME): TextSelector(),
         vol.Required(CONF_ADDR): TextSelector(),
         **LIGHT_EDIT,
+    }
+)
+DATA_SCHEMA_ADD_COVER = vol.Schema(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_COVER_NAME): TextSelector(),
+        vol.Required(CONF_ADDR): TextSelector(),
     }
 )
 DATA_SCHEMA_ADD_KEYPAD = vol.Schema(
@@ -486,6 +512,8 @@ OPTIONS_FLOW = {
             "add_light",
             "select_edit_light",
             "remove_light",
+            "add_cover",
+            "remove_cover",
         ]
     ),
     "add_keypad": SchemaFlowFormStep(
@@ -530,7 +558,7 @@ OPTIONS_FLOW = {
     "remove_keypad": SchemaFlowFormStep(
         partial(get_remove_keypad_light_schema, key=CONF_KEYPADS),
         suggested_values=None,
-        validate_user_input=partial(validate_remove_keypad_light, key=CONF_KEYPADS),
+        validate_user_input=partial(validate_remove_keypad_light_cover, key=CONF_KEYPADS),
     ),
     "add_light": SchemaFlowFormStep(
         DATA_SCHEMA_ADD_LIGHT,
@@ -551,7 +579,17 @@ OPTIONS_FLOW = {
     "remove_light": SchemaFlowFormStep(
         partial(get_remove_keypad_light_schema, key=CONF_DIMMERS),
         suggested_values=None,
-        validate_user_input=partial(validate_remove_keypad_light, key=CONF_DIMMERS),
+        validate_user_input=partial(validate_remove_keypad_light_cover, key=CONF_DIMMERS),
+    ),
+    "add_cover": SchemaFlowFormStep(
+        DATA_SCHEMA_ADD_COVER,
+        suggested_values=None,
+        validate_user_input=validate_add_cover,
+    ),
+    "remove_cover": SchemaFlowFormStep(
+        partial(get_remove_keypad_light_schema, key=CONF_COVERS),
+        suggested_values=None,
+        validate_user_input=partial(validate_remove_keypad_light_cover, key=CONF_COVERS),
     ),
 }
 
@@ -644,7 +682,11 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 name = user_input.pop(CONF_NAME)
                 password = user_input.pop(CONF_PASSWORD, None)
                 username = user_input.pop(CONF_USERNAME, None)
-                user_input |= {CONF_DIMMERS: [], CONF_KEYPADS: []}
+                user_input |= {
+                    CONF_DIMMERS: [],
+                    CONF_COVERS: [],
+                    CONF_KEYPADS: [],
+                }
                 return self.async_create_entry(
                     title=name,
                     data={CONF_PASSWORD: password, CONF_USERNAME: username},
