@@ -108,7 +108,7 @@
           "rate": "Fade rate"
         },
         "data_description": {
-          "addr": "Keypad address, must be formatted as `[##:##:##:##]`",
+          "addr": "Light address, must be formatted as `[##:##:##:##]`",
           "rate": "Time in seconds for the light to transition to a new brightness level"
         },
         "title": "[%key:component::homeworks::options::step::init::menu_options::add_light%]"

@@ -219,7 +219,7 @@ async def validate_add_button(
 async def validate_add_keypad(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Validate keypad or light input."""
+    """Validate keypad input."""
     _validate_address(handler, user_input[CONF_ADDR])
 
     # Standard behavior is to merge the result with the options.
