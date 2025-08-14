@@ -6,7 +6,7 @@ from pyhomeworks.pyhomeworks import Homeworks
 
 from homeassistant.helpers.entity import Entity
 
-from .util import calculate_unique_id
+from .util import calculate_unique_id, signal_name
 
 
 class HomeworksEntity(Entity):
@@ -33,3 +33,6 @@ class HomeworksEntity(Entity):
         )
         self._controller = controller
         self._attr_extra_state_attributes = {"homeworks_address": self._addr}
+
+    def _signal_name(self):
+        return signal_name(self._controller_id, self._addr)

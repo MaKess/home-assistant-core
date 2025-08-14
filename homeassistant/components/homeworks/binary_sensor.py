@@ -80,7 +80,7 @@ class HomeworksBinarySensor(HomeworksEntity, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        signal = f"homeworks_entity_{self._controller_id}_{self._addr}"
+        signal = self._signal_name()
         _LOGGER.debug("connecting %s", signal)
         self.async_on_remove(
             async_dispatcher_connect(self.hass, signal, self._update_callback)

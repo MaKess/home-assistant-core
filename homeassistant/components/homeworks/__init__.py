@@ -36,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from .const import CONF_ADDR, CONF_CONTROLLER_ID, CONF_KEYPADS, DOMAIN
+from .util import signal_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) ->
             _LOGGER.debug("login incorrect")
             return
         addr = values[0]
-        signal = f"homeworks_entity_{controller_id}_{addr}"
+        signal = signal_name(controller_id, addr)
         dispatcher_send(hass, signal, msg_type, values)
 
     config = entry.options
@@ -225,7 +226,7 @@ class HomeworksKeypad:
         self._hass = hass
         self._name = name
         self._id = slugify(self._name)
-        signal = f"homeworks_entity_{controller_id}_{self._addr}"
+        signal = signal_name(controller_id, self._addr)
         _LOGGER.debug("connecting %s", signal)
         self.unsubscribe = async_dispatcher_connect(
             self._hass, signal, self._update_callback
